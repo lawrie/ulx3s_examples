@@ -1,5 +1,7 @@
 bin/
 *.vcd
 tb
+firmware.bin
+firmware.hex
 
 
