@@ -54,7 +54,7 @@ module oled_video #(
                 if (dc == 0) data <= C_oled_init[init_cnt[9:4]];
                 else begin
                     byte <= ~byte;
-		    data = byte ? color[7:0] : color[15:8];
+		    data <= byte ? color[7:0] : color[15:8];
                     if(byte == 0) begin
                       next_pixel <= 1;
                       if (x == C_x_size-1) begin
@@ -65,7 +65,7 @@ module oled_video #(
                 end
             end else begin
               next_pixel <= 0;
-              if (init_cnt[0] == 0) data[7:0] <= { data[6:0], 1'b0 };
+              if (init_cnt[0] == 0) data <= { data[6:0], 1'b0 };
             end
 	end else begin 
             dc <= 1;
