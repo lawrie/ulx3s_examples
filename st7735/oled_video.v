@@ -1,5 +1,5 @@
-// SPI OLED SSD1331 display video XY scan core
-// AUTHORS=EMARD,MMICKO
+// SPI ST7789 display video XY scan core
+// AUTHORS=EMARD,MMICKO and Lawrie Griffiths
 // LICENSE=BSD
 
 module oled_video #(
