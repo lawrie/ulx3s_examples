@@ -47,7 +47,7 @@ module oled_video #(
   reg [7:0] last_cmd;
   
   assign oled_resn = ~reset_cnt[0];
-  assign oled_csn = reset_cnt[0]; 
+  assign oled_csn = 1;  // Connected to backlight
   assign oled_dc = dc;
   assign oled_clk = ~init_cnt[0];
   assign oled_mosi = data[7];
