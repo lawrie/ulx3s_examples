@@ -22,8 +22,8 @@ module oled_video #(
   output wire oled_resn
 );
   localparam C_color_bits = 16;
-  localparam C_x_size = 128;  // pixel X screen size
-  localparam C_y_size = 160;  // pixel Y screen size
+  localparam C_x_size = 256;  // pixel X screen size
+  localparam C_y_size = 256;  // pixel Y screen size
   localparam C_x_bits = $clog2(C_x_size); 
   localparam C_y_bits = $clog2(C_y_size);
 
@@ -46,47 +46,49 @@ module oled_video #(
   reg delay_set = 0;
   reg [7:0] last_cmd;
   
-  assign oled_resn = ~reset_cnt[0];
-  assign oled_csn = 1;  // Connected to backlight
-  assign oled_dc = dc;
-  assign oled_clk = ~init_cnt[0];
-  assign oled_mosi = data[7];
+  assign oled_resn = ~reset_cnt[0]; // Reset is High, Low, High for first 3 cycles
+  assign oled_csn = 1;              // Connected to backlight
+  assign oled_dc = dc;              // 0 for commands, 1 for command parameters and data
+  assign oled_clk = ~init_cnt[0];   // SPI Mode 2
+  assign oled_mosi = data[7];       // Shift out data
 
+  // The next byte in the initialisation sequence
   wire [7:0] next_byte = C_oled_init[init_cnt[10:4]];
 
+  // Do the initialisation sequence and then start sending pixels
   always @(posedge clk) begin
-    if (reset_cnt != 2) begin
+    if (reset_cnt != 2) begin // Reset
       reset_cnt <= reset_cnt+1;
-    end else if (delay_cnt > 0) begin
+    end else if (delay_cnt > 0) begin // Delay
       delay_cnt <= delay_cnt - 1;
     end else if (init_cnt[10:4] != C_init_size) begin
       init_cnt <= init_cnt + 1;
-      if (init_cnt[3:0] == 0) begin
-        if (init) begin
+      if (init_cnt[3:0] == 0) begin // Start of byte
+        if (init) begin // Still initialisation
           dc <= 0;
           arg <= arg + 1;
-          if (arg == 0) begin
-            data <=  0;
+          if (arg == 0) begin // New command
+            data <=  0; // No NOP
             last_cmd <= next_byte;
-          end else if (arg == 1) begin
+          end else if (arg == 1) begin // numArgs and delay_set
             num_args <= next_byte[4:0];
             delay_set <= next_byte[7];
-            if (next_byte == 0) arg <= 0;
+            if (next_byte == 0) arg <= 0; // No args or delay
             data <= last_cmd;
-          end else if (arg <= num_args + 1) begin
+          end else if (arg <= num_args + 1) begin // argument
             data <= next_byte;
             dc <= 1;
             if (arg == num_args + 1 && !delay_set) arg <= 0;
-          end else if (delay_set) begin
+          end else if (delay_set) begin // delay
             if (next_byte != 8'hff) begin
               delay_cnt <= next_byte * ms_cycles;
-            end else begin
+            end else begin // Long delay
               delay_cnt <= 500 * ms_cycles;
             end
             delay_set <= 0;
             arg <= 0;
           end
-        end else begin
+        end else begin // Send pixels and set x,y and next_pixel
           byte_toggle <= ~byte_toggle;
           dc <= 1;
           data <= byte_toggle ? color[7:0] : color[15:8];
@@ -102,11 +104,11 @@ module oled_video #(
             end else x <= x + 1;
           end
         end
-      end else begin
+      end else begin // Shift out byte
         next_pixel <= 0;
         if (init_cnt[0] == 0) data <= { data[6:0], 1'b0 };
       end
-    end else begin 
+    end else begin // Initialisation done, start sending pixels
       init <= 0;
       init_cnt[10:4] <= C_init_size - 1;
     end
