@@ -6,7 +6,7 @@ module oled_video #(
   // file name is relative to directory path in which verilog compiler is running
   // screen can be also XY flipped and/or rotated from this init file
   parameter C_init_file = "st7789_init.mem",
-  parameter C_init_size = 36, // bytes in init file
+  parameter C_init_size = 36 // bytes in init file
 ) (
   input  wire clk, // SPI display clock rate will be half of this clock rate
   
@@ -85,6 +85,7 @@ module oled_video #(
             end else begin // Long delay
               delay_cnt <= 500 * ms_cycles;
             end
+            data <= 0;
             delay_set <= 0;
             arg <= 0;
           end
