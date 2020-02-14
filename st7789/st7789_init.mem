@@ -2,19 +2,19 @@
 01
 80
 96
-// SLPOUT, delay 500
+// SLPOUT, delay 10
 11
 80
-FF
+0A
 // COLMOD, 16-bit color, delay 10
 3A
 81
 55
-10
-// MADCTL 0
+0A
+// MADCTL
 36
 01
-00
+08
 // CASET 
 2A
 04
@@ -27,20 +27,20 @@ E0
 04
 00
 00
-00
-E0
+01
+40
 // INVON, delay 10
 21
 80
-10
+0A
 // NORON, delay 10
 13
 80
-10
-// DISPON, delay 500
+0A
+// DISPON, delay 10
 29
 80
-FF
+0A
 // RAMWR 2C 00
 2C
 00
