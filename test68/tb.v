@@ -45,24 +45,34 @@ module RAM(CLK, nCS, nWE, ADDR, DI, DO);
   
 endmodule
 
-module test68 (
-  input clk_25mhz,
-  output [7:0] leds
-);
+module fx68k_tb;
 
   // ===============================================================
   // 68000 CPU
   // ===============================================================
 
+  // clock generation
+  reg clk25_mhz = 0;
+  always #20 clk25_mhz <= !clk25_mhz;  
+  
   reg  fx68_phi1 = 0; 
   wire fx68_phi2 = !fx68_phi1;
 
-  always @(posedge clk_25mhz) begin
+  always @(posedge clk25_mhz) begin
     fx68_phi1 <= ~fx68_phi1;
   end
 
   reg pwr_up_reset_n = 1;
   
+  initial begin
+    $dumpfile("fx68k.vcd");
+    $dumpvars(0,fx68k_tb);
+    #120 pwr_up_reset_n = 0;
+    #120 pwr_up_reset_n = 1;
+    #100000
+    $finish;
+  end
+
   // CPU outputs
   wire cpu_rw;                   // Read = 1, Write = 0
   wire cpu_as_n;                 // Address strobe
@@ -94,7 +104,7 @@ module test68 (
 
   fx68k fx68k (
     // input
-    .clk( clk_25mhz),
+    .clk( clk25_mhz),
     .enPhi1(fx68_phi1),
     .enPhi2(fx68_phi2),
     .extReset(!pwr_up_reset_n),
@@ -132,15 +142,13 @@ module test68 (
   );
 
   RAM ram(
-    .CLK(clk_25mhz),
+    .CLK(clk25_mhz),
     .nCS(cpu_as_n),
     .nWE(cpu_rw),
     .ADDR(cpu_a[12:1]),
     .DI(cpu_dout),
     .DO(cpu_din)
   );
-
-assign leds = cpu_dout;
 
 endmodule
 

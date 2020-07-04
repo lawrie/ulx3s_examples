@@ -11,16 +11,16 @@ prog: $(BUILDDIR)/toplevel.bit
 
 $(BUILDDIR)/toplevel.json: $(VERILOG)
 	mkdir -p $(BUILDDIR)
-	yosys -p "synth_ecp5 -abc9 -json $@" $^
+	yosys -p "synth_ecp5 -abc9 -top test68 -json $@" $^
 
 $(BUILDDIR)/%.config: $(PIN_DEF) $(BUILDDIR)/toplevel.json
-	 nextpnr-ecp5 --${DEVICE} --package CABGA381 --freq 25 --textcfg  $@ --json $(filter-out $<,$^) --lpf $< 
+	 nextpnr-ecp5 --${DEVICE} --debug --log nextpnr.log --package CABGA381 --freq 25 --textcfg  $@ --json $(filter-out $<,$^) --lpf $< 
 
 $(BUILDDIR)/toplevel.bit: $(BUILDDIR)/toplevel.config
 	ecppack --compress $^ $@
 
 tb: test68.v $(VERILOG)
-	iverilog -o tb test68.v $(VERILOG)
+	iverilog -o tb tb.v $(VERILOG)
 
 sim: tb
 	./tb
