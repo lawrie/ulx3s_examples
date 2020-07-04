@@ -19,6 +19,12 @@ $(BUILDDIR)/%.config: $(PIN_DEF) $(BUILDDIR)/toplevel.json
 $(BUILDDIR)/toplevel.bit: $(BUILDDIR)/toplevel.config
 	ecppack --compress $^ $@
 
+tb: test68.v $(VERILOG)
+	iverilog -o tb test68.v $(VERILOG)
+
+sim: tb
+	./tb
+
 clean:
 	rm -rf ${BUILDDIR}
 
