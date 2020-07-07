@@ -65,21 +65,6 @@ module testram (
        pwr_up_reset_counter <= pwr_up_reset_counter + 1;
   end
 
-  // ===============================================================
-  // Diagnostic leds
-  // ===============================================================
-  reg [15:0] diag16;
-
-  generate
-    genvar i;
-      for(i = 0; i < 4; i = i+1) begin
-        assign gn[17-i] = diag16[8+i];
-        assign gp[17-i] = diag16[12+i];
-        assign gn[24-i] = diag16[i];
-        assign gp[24-i] = diag16[4+i];
-      end
-  endgenerate
-
   reg [15:0] rom_dout;
   reg [28:0] div;
   reg state;
@@ -142,9 +127,73 @@ module testram (
     .rom_dout(rom_dout)
   );
 
-  assign leds = (state == 1 ? rom_dout[7:0] : 0);;
+  // SPI DISPLAY
+  reg [6:0] R_btn_joy;
+  always @(posedge clk_cpu)
+    R_btn_joy <= btn;
 
-  always @(posedge clk_cpu) diag16 <= addr_a[16:1];
+  reg [127:0] R_display;
+  // HEX decoder does printf("%16X\n%16X\n", R_display[63:0], R_display[127:64]);
+  always @(posedge clk_cpu)
+    R_display <= { 1'b0, R_btn_joy, rom_dout, din, addr_a};
+
+  parameter C_color_bits = 16;
+  wire [7:0] x;
+  wire [7:0] y;
+  wire [C_color_bits-1:0] color;
+  hex_decoder_v
+  #(
+    .c_data_len(128),
+    .c_row_bits(4),
+    .c_grid_6x8(1), // NOTE: TRELLIS needs -abc9 option to compile
+    .c_font_file("hex_font.mem"),
+    .c_color_bits(C_color_bits)
+  )
+  hex_decoder_v_inst
+  (
+    .clk(clk_hdmi),
+    .data(R_display),
+    .x(x[7:1]),
+    .y(y[7:1]),
+    .color(color)
+  );
+
+  // allow large combinatorial logic
+  // to calculate color(x,y)
+  wire next_pixel;
+  reg [C_color_bits-1:0] R_color;
+  always @(posedge clk_hdmi)
+    if(next_pixel)
+      R_color <= color;
+
+
+  wire w_oled_csn;
+  lcd_video
+  #(
+    .c_clk_mhz(125),
+    .c_init_file("st7789_linit_xflip.mem"),
+    .c_clk_phase(0),
+    .c_clk_polarity(1),
+    .c_init_size(38)
+  )
+  lcd_video_inst
+  (
+    .clk(clk_hdmi),
+    .reset(R_btn_joy[5]),
+    .x(x),
+    .y(y),
+    .next_pixel(next_pixel),
+    .color(R_color),
+    .spi_clk(oled_clk),
+    .spi_mosi(oled_mosi),
+    .spi_dc(oled_dc),
+    .spi_resn(oled_resn),
+    .spi_csn(w_oled_csn)
+  );
+  //assign oled_csn = w_oled_csn; // 8-pin ST7789: oled_csn is connected to CSn
+  assign oled_csn = 1; // 7-pin ST7789: oled_csn is connected to BLK (backlight enable pin)
+  
+  assign leds = (state == 1 ? rom_dout[7:0] : 0);;
 
 endmodule
 
