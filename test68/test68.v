@@ -61,7 +61,13 @@ module test68 (
     fx68_phi1 <= ~fx68_phi1;
   end
 
-  reg pwr_up_reset_n = 1;
+  reg [15:0] pwr_up_reset_counter = 0;
+  wire       pwr_up_reset_n = &pwr_up_reset_counter;
+
+  always @(posedge clk_25mhz) begin
+     if (!pwr_up_reset_n)
+       pwr_up_reset_counter <= pwr_up_reset_counter + 1;
+  end
   
   // CPU outputs
   wire cpu_rw;                   // Read = 1, Write = 0
