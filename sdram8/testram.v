@@ -137,7 +137,7 @@ module testram (
 
   assign leds = (state == 1 ? rom_dout : 0);
 
-  always @(posedge clk_cpu) diag16 <= addr_a[15:0];
+  always @(posedge clk_cpu) diag16 <= sdram_a;
 
 endmodule
 
