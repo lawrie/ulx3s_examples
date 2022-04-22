@@ -1,7 +1,6 @@
 VERILOG = top.v
-DEVICE = 25k
-IDCODE = 0x21111043
+DEVICE = um-45k
 
-include ../../ulx3s.mk
+include ulx4m.mk
 
 
