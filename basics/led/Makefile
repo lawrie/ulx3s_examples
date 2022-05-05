@@ -1,6 +1,6 @@
 VERILOG = top.v
-DEVICE = um-45k
+DEVICE = 85k
 
-include ulx4m.mk
+include ../../ulx3s.mk
 
 
